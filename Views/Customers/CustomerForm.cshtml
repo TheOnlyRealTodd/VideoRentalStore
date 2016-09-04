@@ -1,0 +1,55 @@
+﻿@using System.Diagnostics.Eventing.Reader
+@model Vidly.ViewModels.CustomerFormViewModel
+@{
+    ViewBag.Title = "New";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+@*If this page is accessed from the New Action, then change page title accordingly. If not, then display customer name.*@
+@if (Model.IsNew)
+{
+    <h2>Add New Customer</h2>
+}
+else
+{
+    <h2>Edit Customer: @Model.Customer.Name</h2>
+}
+
+@*Renders the beginning <form> tag ONLY. Dispose() closes the tag.*@
+@using (Html.BeginForm("Save", "Customers"))
+{
+    @Html.ValidationSummary()
+    <div class="form-group">
+        @Html.LabelFor(m => m.Customer.Name) @*m stands for Model here. This makes a label of the Model.Name.*@
+        @Html.TextBoxFor(m => m.Customer.Name, new {@class = "form-control"})
+        @Html.ValidationMessageFor(m => m.Customer.Name)
+    </div>
+    <div class="form-group">
+        @Html.LabelFor(m => m.Customer.MembershipTypeId) @*m stands for Model here. This makes a label of the Model.Birthday.*@
+        @Html.DropDownListFor(m => m.Customer.MembershipTypeId, new SelectList(Model.MembershipTypes, "Id", "Name"), "Select Membership Type", new { @class = "form-control" })
+        @Html.ValidationMessageFor(m => m.Customer.MembershipTypeId)
+    </div>
+    <div class="form-group">
+        @Html.LabelFor(m => m.Customer.Birthday) @*m stands for Model here. This makes a label of the Model.Birthday.*@
+        @Html.TextBoxFor(m => m.Customer.Birthday, "{0:MMM d yyyy}", new { @class = "form-control" })
+        @Html.ValidationMessageFor(m => m.Customer.Birthday)
+    </div>
+
+
+    
+    <div class="checkbox">
+        <label>
+            @Html.CheckBoxFor(m => m.Customer.IsSubscribedToNewsletter) Subscribed to newsletter?
+        </label>
+    </div>
+    
+    @*Creates customer.ID to send to Controller for database entry*@
+    @Html.HiddenFor(m => m.Customer.Id)
+    @Html.AntiForgeryToken()
+    @*This submit button automatically calls whatever action is defined in the Html.BeginForm method at the top of this page.
+        Since we specified Create, that means we now need to go to the CustomerController and wire up the Create action.*@
+    <button type="submit" class="btn btn-primary">Save</button>
+}
+@section scripts
+{
+    @Scripts.Render("~/bundles/jqueryval")
+}

@@ -1,0 +1,86 @@
+﻿@model IEnumerable<Vidly.Models.Customer>
+@*
+    Note: I've set the model for this view to IEnumerable<Customer>.
+    This is a simple interface implemented by the list class. Since
+    in this view we only want to iterate over this list, and we don't
+    need any of the operations in the List class (eg Add, Remove, etc),
+    it's better to use the IEnumerable interface, which allows use to
+    iterate over the list. If in the future, we replace the List with a
+    different data structure, as long as it is enumerable, our view code
+    will remain unchanged.
+*@
+
+@{
+    ViewBag.Title = "Customers";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<h2>Customers</h2>
+<div>
+    @Html.ActionLink("Add Customer", "New", "Customers", new {@class = "btn btn-info"})
+</div>
+<br/>
+<table id="customers" class="table table-bordered table-hover">
+    <thead>
+        <tr>
+            <th>Customer</th>
+            <th>Membership Type</th>
+            <th>Delete</th>
+        </tr>
+    </thead>
+    <tbody></tbody>
+</table>
+@section scripts
+{
+    <script>
+        $(document).ready(function () {
+            //The below function applies DataTables plugin to the Customers table.
+            var table = $("#customers").DataTable({
+                ajax: {
+                    url: "/api/customersapi",
+                    dataSrc: "" //Blank because this url itself already has the customer data.
+
+                },
+                columns: [
+                    { //FIRST COLUMN HERE (Customer Column). This code gets the data field from the JSON itself.
+                        data: "name",
+                        render: function (data, type, customer) {//data points to the above "name" field here
+                            return "<a href='/customers/edit/" + customer.id + "'>" + customer.name + "</a>"
+                        }
+                    },
+                    { //SECOND COLUMN HERE (Membership Type column)
+                        data: "membershipType.name"
+                    },
+                    { //THIRD COLUMN HERE (
+                        data: "id", //this "data" part defines the definition of the variable used below as part of the URL to be, in this case, "id".
+                        //The data is then passed as an argument to this function and invoked in the URL.
+                        render: function(data) {
+                            return "<button class='btn-link js-delete' data-customer-id=" + data + ">Delete</button>"
+                        }
+                    }
+
+
+                ]
+            });
+            //When the delete button is clicked, remove the row and delete from the database (via REST/HTTP DELETE API request)
+            $("#customers").on("click", ".js-delete", function () {
+                var button = $(this); //this refers to the element selected by #customers .js-delete (the button)/Allows you to use the button below
+                bootbox.confirm("Are you sure you want to delete this customer?",
+                    function (result) {
+                        if (result) {
+                            $.ajax({
+                                url: "/api/customersapi/" + button.attr("data-customer-id"),
+                                method: "DELETE",
+                                success: function () {
+                                    table.row(button.parents("tr")).remove().draw(); //Removes the specified tr (table row) that the button belongs to from the page, DataTable model, and redraws the DataTable to reflect this.
+                                }
+                            });
+                        }
+
+                    });
+
+                           
+                        });
+            });
+    </script>
+}
